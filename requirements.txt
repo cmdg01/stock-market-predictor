@@ -1,0 +1,11 @@
+streamlit
+requests
+pandas
+plotly
+yfinance
+numpy
+streamlit-option-menu
+xgboost
+scikit-learn
+joblib
+statsmodels
