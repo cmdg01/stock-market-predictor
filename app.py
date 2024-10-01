@@ -14,10 +14,6 @@ from sklearn.metrics import mean_squared_error
 import joblib
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import os
-import gdown
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
 import io
 from sklearn.preprocessing import MinMaxScaler
 
