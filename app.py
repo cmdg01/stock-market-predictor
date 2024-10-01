@@ -14,10 +14,7 @@ from sklearn.metrics import mean_squared_error
 import joblib
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import os
-import gdown
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+
 import io
 from sklearn.preprocessing import MinMaxScaler
 
@@ -86,36 +83,6 @@ def fine_tune_model(symbol):
     
     # Return the fine-tuned model and its RMSE
     return new_model, rmse
-
-def get_drive_service():
-    creds_json = {
-        "type": "service_account",
-        "project_id": "the-eye-437304",
-        "client_email": "the-eye@the-eye-437304.iam.gserviceaccount.com",
-        "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n"
-    }
-    creds = Credentials.from_service_account_info(creds_json)
-    return build('drive', 'v3', credentials=creds)
-
-@st.cache_resource
-def download_model(file_id, output_path):
-    if not os.path.exists(output_path):
-        service = get_drive_service()
-        request = service.files().get_media(fileId=file_id)
-        fh = io.BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
-        done = False
-        while done is False:
-            status, done = downloader.next_chunk()
-            print(f"Download {int(status.progress() * 100)}%.")
-        fh.seek(0)
-        with open(output_path, 'wb') as f:
-            f.write(fh.read())
-    return output_path
-
-# Updated file ID and service account email
-sarima_model_file_id = '1o5790y30fby6p5Vfpx6o1umQbSL8hVwY'
-service_account_email = 'the-eye@the-eye-437304.iam.gserviceaccount.com'
 
 # Remove or comment out SARIMA model loading
 # sarima_model_path = download_model(sarima_model_file_id, 'sarima_model.joblib')
