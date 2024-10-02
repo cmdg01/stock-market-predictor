@@ -19,8 +19,7 @@ import io
 from sklearn.preprocessing import MinMaxScaler
 
 base_xgb_model = joblib.load('xgb_model.joblib')
-# API key (consider using environment variables for security)
-API_KEY = "5KX601WBN1NA9XAN"
+
 
 # Function to fetch data from Alpha Vantage
 def fetch_data(url):
@@ -83,11 +82,6 @@ def fine_tune_model(symbol):
     
     # Return the fine-tuned model and its RMSE
     return new_model, rmse
-
-# Remove or comment out SARIMA model loading
-# sarima_model_path = download_model(sarima_model_file_id, 'sarima_model.joblib')
-# sarima_model = joblib.load(sarima_model_path)
-
 # Function to predict stock prices using XGBoost and SARIMA models
 def predict_stock_price(symbol, weeks=52):
     # Fine-tune the XGBoost model for the specific stock
@@ -115,20 +109,13 @@ def predict_stock_price(symbol, weeks=52):
         current_data = np.roll(current_data, -1)
         current_data[-1] = pred
     
-    # Make SARIMA predictions
-    # sarima_pred = sarima_model.forecast(steps=weeks)
-    
-    # Average the predictions
-    # avg_pred = [(x + y) / 2 for x, y in zip(xgb_pred, sarima_pred)]
-    
     # Create a DataFrame with dates and predictions
     last_date = df.index[-1]
     future_dates = pd.date_range(start=last_date + timedelta(days=7), periods=weeks, freq='W')
     forecast_df = pd.DataFrame({
         'Date': future_dates, 
         'XGB_Predicted_Price': xgb_pred,
-        # 'SARIMA_Predicted_Price': sarima_pred,
-        # 'Avg_Predicted_Price': avg_pred
+        
     })
     forecast_df.set_index('Date', inplace=True)
     
@@ -497,139 +484,114 @@ def handle_outliers(predictions, last_known_price, threshold=100):
     return predictions.apply(lambda x: max(x, last_known_price) if x < threshold else x)
 
 def main():
-    st.title('Stock Price Predictor')
-
-    ticker = st.text_input('Enter Stock Ticker (e.g., AAPL, GOOGL)')
-    start_date = st.date_input('Start Date', value=pd.to_datetime('2020-01-01'))
-    end_date = st.date_input('End Date', value=pd.to_datetime('today'))
-
-    prediction_days = st.slider('Number of days to predict', min_value=1, max_value=90, value=30)
-    ema_period = st.slider('EMA Period', min_value=5, max_value=100, value=20)
-
-    if st.button('Predict'):
-        if ticker and start_date and end_date:
-            data = yf.download(ticker, start=start_date, end=end_date)
-            
-            if not data.empty:
-                st.subheader('Historical Data')
-                st.dataframe(data)
-
-                last_known_price = data['Close'].iloc[-1]
-
-                # EMA Prediction
-                ema = calculate_ema(data['Close'], period=ema_period)
-                future_ema = predict_with_ema(data, days_to_predict=prediction_days)
-                future_ema = handle_outliers(future_ema, last_known_price)
-
-                # XGBoost Prediction
-                data_with_features = create_features(data)
-                xgb_model = train_xgb_model(data_with_features)
-                future_xgb = predict_with_xgb(xgb_model, data_with_features, days_to_predict=prediction_days)
-                future_xgb = handle_outliers(future_xgb, last_known_price)
-
-                # Average Prediction
-                future_avg = (future_ema + future_xgb) / 2
-
-                # Plotting
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Historical'))
-                fig.add_trace(go.Scatter(x=data.index, y=ema, mode='lines', name='EMA'))
-                fig.add_trace(go.Scatter(x=future_ema.index, y=future_ema, mode='lines', name='EMA Prediction', line=dict(dash='dash')))
-                fig.add_trace(go.Scatter(x=future_xgb.index, y=future_xgb, mode='lines', name='XGB Prediction', line=dict(dash='dot')))
-                fig.add_trace(go.Scatter(x=future_avg.index, y=future_avg, mode='lines', name='Average Prediction', line=dict(color='red')))
-                fig.update_layout(title=f'{ticker} Stock Price and Predictions', xaxis_title='Date', yaxis_title='Price')
-                st.plotly_chart(fig)
-
-                # Display prediction results
-                st.subheader('Predictions')
-                predictions_df = pd.DataFrame({
-                    'Date': future_avg.index,
-                    'EMA Prediction': future_ema.values,
-                    'XGB Prediction': future_xgb.values,
-                    'Average Prediction': future_avg.values
-                })
-                st.dataframe(predictions_df)
-
-                # Display outlier information
-                st.subheader('Outlier Information')
-                outlier_count = (predictions_df == 'Outlier').sum()
-                st.write(f"Number of outliers (predictions below $100):")
-                st.write(f"EMA Prediction: {outlier_count['EMA Prediction']}")
-                st.write(f"XGB Prediction: {outlier_count['XGB Prediction']}")
-                st.write(f"Average Prediction: {outlier_count['Average Prediction']}")
-
-            else:
-                st.error('No data available for the selected date range.')
-        else:
-            st.error('Please enter all required fields.')
-
-# Main application function
-def main():
     # Set up the Streamlit page configuration
     st.set_page_config(page_title="Advanced Stock Data Visualizer", layout="wide")
     
-    # Apply custom CSS for improved UI
+    # Apply custom CSS for improved UI and theme support
     st.markdown("""
     <style>
+    :root {
+        --background-color: #1e2a3a;
+        --text-color: #ffffff;
+        --card-background: #2c3e50;
+        --sidebar-background: #0e1621;
+    }
+    
+    @media (prefers-color-scheme: light) {
+        :root {
+            --background-color: #f0f2f5;
+            --text-color: #333333;
+            --card-background: #ffffff;
+            --sidebar-background: #e0e0e0;
+        }
+    }
+    
+    body {
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+    
     .reportview-container {
-        background: #1e2a3a;
-        color: #ffffff;
+        background: var(--background-color);
+        color: var(--text-color);
     }
+    
     .sidebar .sidebar-content {
-        background: #0e1621;
+        background: var(--sidebar-background);
     }
+    
     .Widget>label {
-        color: #ffffff;
+        color: var(--text-color);
         font-weight: bold;
     }
-    .stRadio>div{
+    
+    .stRadio>div {
         flex-direction: row;
         align-items: center;
     }
-    .stRadio>div>label{
+    
+    .stRadio>div>label {
         margin-right: 15px;
     }
+    
     .big-font {
         font-size: 24px !important;
         font-weight: bold;
     }
+    
     .medium-font {
         font-size: 18px !important;
     }
+    
     .card {
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         padding: 20px;
         margin-bottom: 20px;
-        background-color: #2c3e50;
-        color: #ffffff;
+        background-color: var(--card-background);
+        color: var(--text-color);
     }
+    
     .feature-card {
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         padding: 20px;
         margin-bottom: 20px;
-        background-color: #34495e;
-        color: #ffffff;
+        background-color: var(--card-background);
+        color: var(--text-color);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+    
     .feature-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
+    
     .feature-icon {
         font-size: 2.5em;
         margin-bottom: 10px;
     }
+    
     h1, h2, h3, h4, h5, h6 {
-        color: #ffffff;
+        color: var(--text-color);
     }
+    
     .stMetric {
-        background-color: #2c3e50;
+        background-color: var(--card-background);
         padding: 10px;
         border-radius: 5px;
     }
     </style>
+    
+    <script>
+    function updateTheme() {
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+    }
+    
+    updateTheme();
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(updateTheme);
+    </script>
     """, unsafe_allow_html=True)
     
     # Set the main title of the application
