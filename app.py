@@ -600,65 +600,108 @@ def main():
     # Apply custom CSS for improved UI
     st.markdown("""
     <style>
+    :root {
+        --background-color: #1e2a3a;
+        --text-color: #ffffff;
+        --card-background: #2c3e50;
+        --sidebar-background: #0e1621;
+    }
+    
+    @media (prefers-color-scheme: light) {
+        :root {
+            --background-color: #f0f2f5;
+            --text-color: #333333;
+            --card-background: #ffffff;
+            --sidebar-background: #e0e0e0;
+        }
+    }
+    
+    body {
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+    
     .reportview-container {
-        background: #1e2a3a;
-        color: #ffffff;
+        background: var(--background-color);
+        color: var(--text-color);
     }
+    
     .sidebar .sidebar-content {
-        background: #0e1621;
+        background: var(--sidebar-background);
     }
+    
     .Widget>label {
-        color: #ffffff;
+        color: var(--text-color);
         font-weight: bold;
     }
-    .stRadio>div{
+    
+    .stRadio>div {
         flex-direction: row;
         align-items: center;
     }
-    .stRadio>div>label{
+    
+    .stRadio>div>label {
         margin-right: 15px;
     }
+    
     .big-font {
         font-size: 24px !important;
         font-weight: bold;
     }
+    
     .medium-font {
         font-size: 18px !important;
     }
+    
     .card {
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         padding: 20px;
         margin-bottom: 20px;
-        background-color: #2c3e50;
-        color: #ffffff;
+        background-color: var(--card-background);
+        color: var(--text-color);
     }
+    
     .feature-card {
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         padding: 20px;
         margin-bottom: 20px;
-        background-color: #34495e;
-        color: #ffffff;
+        background-color: var(--card-background);
+        color: var(--text-color);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+    
     .feature-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
+    
     .feature-icon {
         font-size: 2.5em;
         margin-bottom: 10px;
     }
+    
     h1, h2, h3, h4, h5, h6 {
-        color: #ffffff;
+        color: var(--text-color);
     }
+    
     .stMetric {
-        background-color: #2c3e50;
+        background-color: var(--card-background);
         padding: 10px;
         border-radius: 5px;
     }
     </style>
+    
+    <script>
+    function updateTheme() {
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+    }
+    
+    updateTheme();
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(updateTheme);
+    </script>
     """, unsafe_allow_html=True)
     
     # Set the main title of the application
